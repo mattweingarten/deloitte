@@ -9,7 +9,7 @@ import math
 ## EU   0.6 1 0.4
 ## US   0.3 0.4 1
 region_sigma = np.genfromtxt("./data/Correlation.csv",delimiter=',',skip_header=1)[: , 1:4]
-region_mu = [1,1,1]
+region_mu = [0,0,0]
 
 ##SET up factors matrix:
 #aplha_ch, alpha_eu, alpha_us
@@ -72,10 +72,10 @@ gammas = np.zeros(portfolio.size)
 for i in range(portfolio.size):
      gammas[i] = math.sqrt((1-math.pow(alphas[i].sum(), 2)))
 
-#this function runs 1 montecarlo simulation for all loeans and return the loss
+#this function runs 1 montecarlo simulation for all loans and return the a loss
 def simulation():
     res = 0
-    #random sample for regional covariance
+    #random sample for regional covariance and zero mean
     regsample = np.random.multivariate_normal(region_mu,region_sigma,1)[0]
     #random sample point for each loan
     loansample =  np.random.normal(0,1,portfolio.size)
@@ -85,7 +85,7 @@ def simulation():
     return res
  
 
-##runs simulation 100 000 times
+##runs simulation 100 000 times (super slow for 100 000)
 def montecarlo():
     n = 100
     sims = np.zeros(n)
@@ -93,17 +93,18 @@ def montecarlo():
         sims[i] = simulation()
     return sims
 
-#displays results ins histogram
+#displays results ins histogram(the histogramm sucks)
 def displayhisto(sims, mean, std):
     n = sims.size
-    max = mean +  500000
-    min = mean -  500000
-    histo, bins = np.histogram(sims,100,(min,max))
+    max = mean +   std
+    min = mean -  std
+    histo, bins = np.histogram(sims,20,(min,max))
     plt.hist(sims,bins)
     plt.show()
 
-##returns mean and standard deviation of normal estimation from data
+##returns mean and standard deviation  estimation from data
 def describemonte(sims):
+    
     n = sims.size
     std = 0
     mean = np.average(sims)
@@ -114,6 +115,7 @@ def describemonte(sims):
 
 sims = montecarlo()
 mu, std = describemonte(sims)
-displayhisto(sims, mu, std)
+#displayhisto(sims, mu, std)
 
 print((mu,std))
+print(int(np.sum(sims)/ 1000000))
