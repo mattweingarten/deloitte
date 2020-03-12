@@ -6,7 +6,7 @@ from scipy import stats
 import math
 import time
 
-start_time = time.time()
+
 ##SET up correlation matrix:
 ##      CH EU US
 ## CH   1 0.6 0.3
@@ -91,7 +91,8 @@ def simulation():
 
 ##runs simulation 100 000 times (super slow for 100 000)
 def montecarlo():
-    n = 100
+    start_time = time.time()
+    n = 10000
     sims = np.zeros(n)
     for i in range(n):
         sims[i] = int(simulation()/1000000)
@@ -100,6 +101,7 @@ def montecarlo():
         # print("Million")
         # print("____________________________")
         #   time.sleep(0.5)
+    print("%s seconds" % (time.time() - start_time))
     return sims
 
 #displays results ins histogram(the histogramm sucks)
@@ -122,17 +124,37 @@ def describemonte(sims):
     return (mean, math.sqrt(std/n))
 
 
-sims = montecarlo()
-mu, std = describemonte(sims)
 
-var95 = np.percentile(sims,0.95)
-var99 = np.percentile(sims,0.99)
-print("var95: %s" % var95)
-print("var99: %s" % var99)
+def es(arr, thresh):
+     res = 0
+     c = 0
+     n = arr.size
+     for i in range(n):
+        if (arr[i] >= thresh):
+            c+= 1
+            res += arr[i]
+     return res/c
 
-print((mu,std))
+def run(): 
+    sims = montecarlo()
+    mu, std = describemonte(sims)
+
+    var95 = np.quantile(sims,0.95)
+    var99 = np.quantile(sims,0.99)
+
+    es95 = es(sims,var95)
+    es99 = es(sims,var99)
+
+    
+    print("mean: %s" % mu)
+    print("std: %s" % std)
+    print("VaR(95): %s" % var95)
+    print("VaR(99): %s" % var99)                
+    print("Es(95): %s" % es95)
+    print("Es(99): %s" % es99)
+    displayhisto(sims, mu, std)
+        
 
 
 
-print("--- %s seconds ---" % (time.time() - start_time))
-displayhisto(sims, mu, std)
+run()
